@@ -9,6 +9,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.foody.viewmodels.MainViewModel
 import com.example.foody.R
@@ -24,6 +26,8 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class RecipesFragment : Fragment() {
+    //automatically added by navigation component when we specify arguments in our my_nav
+    private val args by navArgs<RecipesFragmentArgs>()
 
     private var _binding: FragmentRecipesBinding? = null
     private val binding: FragmentRecipesBinding get() = _binding!!
@@ -48,6 +52,10 @@ class RecipesFragment : Fragment() {
         binding.mainViewModel = mainViewModel //bind our mainViewModel to our fragment
         setupRecyclerView()
         readDatabase()
+
+        binding.recipesFab.setOnClickListener{
+            findNavController().navigate(R.id.action_recipesFragment_to_recipesBottomSheet)
+        }
         return binding.root
     }
 
@@ -61,7 +69,10 @@ class RecipesFragment : Fragment() {
         lifecycleScope.launch{
             //don't call read database, only call readDatabase when this function is called
             mainViewModel.readRecipes.observeOnce(viewLifecycleOwner){database ->
-                if (database.isNotEmpty()){ //if there's a row in the db then set the data for the recycler view
+                //if our database is not empty and we're not backFromBottomSheet, then load the data
+                //when we get back from our bottomSheet, it means we want to create a new query for our GET request. We only read from the database when backFromBottomSheet false
+                //when we leave the bottomSheet we want to request new ai data
+                if (database.isNotEmpty() && !args.backFromBottomSheet){ //if there's a row in the db then set the data for the recycler view
                     Log.d("RecipesFragment", "readDatabase called!")
                     mAdapter.setData(database[0].foodRecipe) //access the row in the db
                     hideShimmerEffect()
