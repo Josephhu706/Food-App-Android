@@ -20,7 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
+@HiltViewModel
 class RecipesViewModel @Inject constructor(
     application: Application,
     private val dataStoreRepository: DataStoreRepository
@@ -43,14 +43,15 @@ class RecipesViewModel @Inject constructor(
         //call readMealAndDietType suspend function from repository
             readMealAndDietType.collect{ value ->
                 //set the value of the variables stored above to the datastore values
+                //we are getting the newest values from datastore preferences
                 mealType = value.selectedMealType
                 dietType = value.selectedDietType
             }
         }
         queries[QUERY_NUMBER] = DEFAULT_RECIPES_NUMBER
         queries[QUERY_API_KEY] = API_KEY
-        queries[QUERY_TYPE] = DEFAULT_MEAL_TYPE
-        queries[QUERY_DIET] = DEFAULT_DIET_TYPE
+        queries[QUERY_TYPE] = mealType
+        queries[QUERY_DIET] = dietType
         queries[QUERY_ADD_RECIPE_INFORMATION] = "true"
         queries[QUERY_FILL_INGREDIENTS] = "true"
         return queries
