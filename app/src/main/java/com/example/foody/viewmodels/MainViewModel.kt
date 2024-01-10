@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.room.Query
 import com.example.foody.data.Repository
 import com.example.foody.data.database.RecipesEntity
 import com.example.foody.models.FoodRecipe
@@ -35,9 +36,13 @@ class MainViewModel @Inject constructor(
 
     /** RETROFIT */
     var recipesResponse: MutableLiveData<NetworkResult<FoodRecipe>> = MutableLiveData()
+    var searchedRecipesResponse: MutableLiveData<NetworkResult<FoodRecipe>> = MutableLiveData()
 
     fun getRecipes(queries: Map<String, String>) = viewModelScope.launch {
         getRecipesSafeCall(queries)
+    }
+    fun searchRecipes(searchQuery: Map<String, String>) = viewModelScope.launch {
+        searchRecipesSafeCall(searchQuery)
     }
 
     private suspend fun getRecipesSafeCall(queries: Map<String, String>) {
@@ -57,6 +62,22 @@ class MainViewModel @Inject constructor(
             }
         } else {
             recipesResponse.value = NetworkResult.Error("No Internet Connection")
+        }
+    }
+
+    private suspend fun searchRecipesSafeCall(searchQuery: Map<String, String>) {
+        searchedRecipesResponse.value = NetworkResult.Loading()
+        if(hasInternetConnection()){
+            try {
+                //handle offline caching from api and cache data after we receive it
+                val response = repository.remote.searchRecipes(searchQuery)
+                //we can reuse the handleFoodRecipesResponse because the API response is the same for searching and fetching
+                searchedRecipesResponse.value = handleFoodRecipesResponse(response)
+            } catch (e: Exception) {
+                searchedRecipesResponse.value = NetworkResult.Error("Recipes not found")
+            }
+        } else {
+            searchedRecipesResponse.value = NetworkResult.Error("No Internet Connection")
         }
     }
 
