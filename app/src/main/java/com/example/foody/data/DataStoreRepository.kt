@@ -9,6 +9,7 @@ import androidx.datastore.preferences.emptyPreferences
 import androidx.datastore.preferences.preferencesKey
 import com.example.foody.util.Constants.Companion.DEFAULT_DIET_TYPE
 import com.example.foody.util.Constants.Companion.DEFAULT_MEAL_TYPE
+import com.example.foody.util.Constants.Companion.PREFERENCES_BACK_ONLINE
 import com.example.foody.util.Constants.Companion.PREFERENCES_DIET_TYPE
 import com.example.foody.util.Constants.Companion.PREFERENCES_DIET_TYPE_ID
 import com.example.foody.util.Constants.Companion.PREFERENCES_MEAL_TYPE
@@ -36,8 +37,9 @@ class DataStoreRepository @Inject constructor(@ApplicationContext private  val c
         //this is the chip for the diet Type
         val selectedDietType = preferencesKey<String>(PREFERENCES_DIET_TYPE)
         val selectedDietTypeId = preferencesKey<Int>(PREFERENCES_DIET_TYPE_ID)
+        val backOnline = preferencesKey<Boolean>(PREFERENCES_BACK_ONLINE)
     }
-    //create datstore and name it
+    //create datastore and name it
     private val dataStore: DataStore<Preferences> = context.createDataStore(
         name = PREFERENCES_NAME
     )
@@ -49,6 +51,13 @@ class DataStoreRepository @Inject constructor(@ApplicationContext private  val c
             preferences[PreferencesKeys.selectedMealTypeId] = mealTypeId
             preferences[PreferencesKeys.selectedDietType] = dietType
             preferences[PreferencesKeys.selectedDietTypeId] = dietTypeId
+        }
+    }
+
+    //this function takes the value of if we have internet connection and saves it in local storage
+    suspend fun saveBackOnline(backOnline: Boolean){
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.backOnline] = backOnline
         }
     }
 
@@ -74,6 +83,21 @@ class DataStoreRepository @Inject constructor(@ApplicationContext private  val c
                 selectedDietType,
                 selectedDietTypeId
             )
+        }
+
+    //this function is to read our backOnline status from local storage
+    val readBackOnline: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { preferences ->
+            //check if we have the backOnline status stored in local storage
+            val backOnline = preferences[PreferencesKeys.backOnline] ?: false
+            backOnline
         }
 }
 

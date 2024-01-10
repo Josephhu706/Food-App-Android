@@ -17,11 +17,13 @@ import com.example.foody.R
 import com.example.foody.adapters.RecipesAdapter
 import com.example.foody.databinding.FragmentRecipesBinding
 import com.example.foody.util.Constants.Companion.API_KEY
+import com.example.foody.util.NetworkListener
 import com.example.foody.util.NetworkResult
 import com.example.foody.util.observeOnce
 import com.example.foody.viewmodels.RecipesViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_recipes.view.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -35,6 +37,8 @@ class RecipesFragment : Fragment() {
     private lateinit var mainViewModel: MainViewModel
     private lateinit var recipesViewModel: RecipesViewModel
     private val mAdapter by lazy { RecipesAdapter() }
+
+    private lateinit var networkListener: NetworkListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,10 +55,38 @@ class RecipesFragment : Fragment() {
         binding.lifecycleOwner = this //in our fragmentRecipesFragment, we are using live data objects so we need to specify the lifecycle owner.
         binding.mainViewModel = mainViewModel //bind our mainViewModel to our fragment
         setupRecyclerView()
-        readDatabase()
+
+        //get the lastest value from dataStore and set that value to the backOnline variable
+        recipesViewModel.readBackOnline.observe(viewLifecycleOwner) {
+            recipesViewModel.backOnline = it
+        }
+        //launch a coroutine because .collect is a suspend function
+        lifecycleScope.launch {
+            networkListener = NetworkListener()
+            //collect the MutableStateFlow for networkAvailability and observe its value
+            networkListener.checkNetworkAvailability(requireContext())
+                .collect{ status ->
+                    Log.d("NetworkListener", status.toString())
+                    //check the status from the networkListener util class, and observe it, then set the vm global variable to the value of the status
+                    //display a toast accordingly
+                    recipesViewModel.networkStatus = status
+                    recipesViewModel.showNetworkStatus()
+                    //whenever our network status changes, we want to read the room db or make api call
+                    readDatabase()
+                }
+        }
+
+        networkListener = NetworkListener()
 
         binding.recipesFab.setOnClickListener{
-            findNavController().navigate(R.id.action_recipesFragment_to_recipesBottomSheet)
+            if (recipesViewModel.networkStatus) {
+                //only allow us to open the bottom sheet if we have internet connection
+                findNavController().navigate(R.id.action_recipesFragment_to_recipesBottomSheet)
+            } else {
+                //else show a toast with an error
+                recipesViewModel.showNetworkStatus()
+            }
+
         }
         return binding.root
     }
