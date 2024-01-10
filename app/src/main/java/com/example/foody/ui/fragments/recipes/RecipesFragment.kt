@@ -4,11 +4,15 @@ import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -27,7 +31,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class RecipesFragment : Fragment() {
+class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
     //automatically added by navigation component when we specify arguments in our my_nav
     private val args by navArgs<RecipesFragmentArgs>()
 
@@ -54,6 +58,8 @@ class RecipesFragment : Fragment() {
         _binding = FragmentRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this //in our fragmentRecipesFragment, we are using live data objects so we need to specify the lifecycle owner.
         binding.mainViewModel = mainViewModel //bind our mainViewModel to our fragment
+
+        setHasOptionsMenu(true)
         setupRecyclerView()
 
         //get the lastest value from dataStore and set that value to the backOnline variable
@@ -95,6 +101,15 @@ class RecipesFragment : Fragment() {
         binding.recyclerView.adapter = mAdapter
         binding.recyclerView.layoutManager = LinearLayoutManager(requireActivity())
         showShimmerEffect()
+    }
+
+    //this function creates the search menu
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.recipes_menu, menu)
+        val search = menu.findItem(R.id.menu_search)
+        val searchView = search.actionView as? SearchView
+        searchView?.isSubmitButtonEnabled = true
+        searchView?.setOnQueryTextListener(this)
     }
 
     private fun readDatabase() {
@@ -141,6 +156,32 @@ class RecipesFragment : Fragment() {
         }
     }
 
+    private fun searchApiData(searchQuery: String){
+        showShimmerEffect()
+        mainViewModel.searchRecipes(recipesViewModel.applySearchQuery(searchQuery))
+        mainViewModel.searchedRecipesResponse.observe(viewLifecycleOwner){ response ->
+            when (response) {
+                is NetworkResult.Success -> {
+                    hideShimmerEffect()
+                    val foodRecipe = response.data
+                    foodRecipe?.let { mAdapter.setData(it) }
+                }
+                is NetworkResult.Error -> {
+                    hideShimmerEffect()
+                    loadDataFromCache()
+                    Toast.makeText(
+                        requireContext(),
+                        response.message.toString(),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is NetworkResult.Loading -> {
+                    showShimmerEffect()
+                }
+            }
+        }
+    }
+
     private fun loadDataFromCache(){
         mainViewModel.readRecipes.observe(viewLifecycleOwner){database ->
             if(database.isNotEmpty()){
@@ -161,5 +202,17 @@ class RecipesFragment : Fragment() {
         super.onDestroy()
         _binding = null //this prevents memory leaks
         //whenever the recipes fragment is destroyed then the binding will be set to null
+    }
+
+    override fun onQueryTextSubmit(query: String?): Boolean {
+        if(query != null) {
+            searchApiData(query)
+        }
+        return true
+    }
+
+    //we don't want to search onChange because it's bad ux, so we'll not set any code
+    override fun onQueryTextChange(p0: String?): Boolean {
+        return true
     }
 }
