@@ -3,10 +3,10 @@ package com.example.foody.util
 import androidx.recyclerview.widget.DiffUtil
 import com.example.foody.models.Result
 
-//
-class RecipesDiffUtil(
-    private val oldList: List<Result>,
-    private val newList: List<Result>
+//we are using a generic diff util so we can use this class for both the recipes recyclerView adapter and the ingredients adapter
+class RecipesDiffUtil<T>(
+    private val oldList: List<T>,
+    private val newList: List<T>
 ): DiffUtil.Callback() { //compares the old list with the new list and only updates new views and is more performant
     override fun getOldListSize(): Int { // returns size of old list
         return oldList.size
