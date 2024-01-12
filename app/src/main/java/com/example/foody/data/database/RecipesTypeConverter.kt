@@ -2,9 +2,11 @@ package com.example.foody.data.database
 
 import androidx.room.TypeConverter
 import com.example.foody.models.FoodRecipe
+import com.example.foody.models.Result
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
+//we can't store the Result data class or FoodRecipe directly in our datastore, we need to convert it to json
 class RecipesTypeConverter {
 
     var gson = Gson()
@@ -19,4 +21,15 @@ class RecipesTypeConverter {
         val listType = object: TypeToken<FoodRecipe>() {}.type
         return gson.fromJson(data, listType)
     } //this is how we retrieve our data and convert it from json into a FoodRecipe
+
+    @TypeConverter
+    fun resultToString(result: Result): String {
+        return gson.toJson(result)
+    }
+    @TypeConverter
+    fun stringToResult(data: String): Result {
+        //uses gson to convert data from json back to Result
+        val listType = object : TypeToken<Result>() {}.type
+        return gson.fromJson(data, listType)
+    }
 }
