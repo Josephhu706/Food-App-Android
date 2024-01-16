@@ -11,5 +11,4 @@
     <item android:id="@+id/foodJokeFragment"
         android:title="@string/food_joke"
         android:icon="@drawable/ic_food_joke"/>
-
 </menu>

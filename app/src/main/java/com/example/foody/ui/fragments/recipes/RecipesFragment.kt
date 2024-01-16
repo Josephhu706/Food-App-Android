@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
+import androidx.compose.animation.core.InfiniteAnimationPolicy.Key.equals
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.observe
@@ -20,6 +21,8 @@ import com.example.foody.viewmodels.MainViewModel
 import com.example.foody.R
 import com.example.foody.adapters.RecipesAdapter
 import com.example.foody.databinding.FragmentRecipesBinding
+import com.example.foody.models.Result
+import com.example.foody.util.Constants
 import com.example.foody.util.Constants.Companion.API_KEY
 import com.example.foody.util.NetworkListener
 import com.example.foody.util.NetworkResult
@@ -27,16 +30,17 @@ import com.example.foody.util.observeOnce
 import com.example.foody.viewmodels.RecipesViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_recipes.view.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+
 
 @AndroidEntryPoint
 class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
     //automatically added by navigation component when we specify arguments in our my_nav
     private val args by navArgs<RecipesFragmentArgs>()
-
     private var _binding: FragmentRecipesBinding? = null
-    private val binding: FragmentRecipesBinding get() = _binding!!
+    private val binding get() = _binding!!
 
     private lateinit var mainViewModel: MainViewModel
     private lateinit var recipesViewModel: RecipesViewModel
@@ -54,7 +58,6 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         _binding = FragmentRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this //in our fragmentRecipesFragment, we are using live data objects so we need to specify the lifecycle owner.
         binding.mainViewModel = mainViewModel //bind our mainViewModel to our fragment
@@ -82,8 +85,6 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
                 }
         }
 
-        networkListener = NetworkListener()
-
         binding.recipesFab.setOnClickListener{
             if (recipesViewModel.networkStatus) {
                 //only allow us to open the bottom sheet if we have internet connection
@@ -99,7 +100,7 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
 
     private fun setupRecyclerView(){
         binding.recyclerView.adapter = mAdapter
-        binding.recyclerView.layoutManager = LinearLayoutManager(requireActivity())
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         showShimmerEffect()
     }
 
@@ -118,8 +119,12 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
             mainViewModel.readRecipes.observeOnce(viewLifecycleOwner){database ->
                 //if our database is not empty and we're not backFromBottomSheet, then load the data
                 //when we get back from our bottomSheet, it means we want to create a new query for our GET request. We only read from the database when backFromBottomSheet false
-                //when we leave the bottomSheet we want to request new ai data
-                if (database.isNotEmpty() && !args.backFromBottomSheet){ //if there's a row in the db then set the data for the recycler view
+                //when we leave the bottomSheet we want to request new ai
+                var test = false
+                if(arguments != null) {
+                    test = arguments!!.getBoolean("backFromBottomSheet", false)
+                }
+                if (database.isNotEmpty() && !test){ //if there's a row in the db then set the data for the recycler view
                     Log.d("RecipesFragment", "readDatabase called!")
                     mAdapter.setData(database[0].foodRecipe) //access the row in the db
                     hideShimmerEffect()
@@ -183,9 +188,11 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
     }
 
     private fun loadDataFromCache(){
-        mainViewModel.readRecipes.observe(viewLifecycleOwner){database ->
-            if(database.isNotEmpty()){
-                mAdapter.setData(database[0].foodRecipe)
+        lifecycleScope.launch{
+            mainViewModel.readRecipes.observe(viewLifecycleOwner){database ->
+                if(database.isNotEmpty()){
+                    mAdapter.setData(database[0].foodRecipe)
+                }
             }
         }
     }
