@@ -1,8 +1,12 @@
 package com.example.foody.ui.fragments.favorites
 
 import android.os.Bundle
+import android.os.Message
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
@@ -12,16 +16,17 @@ import com.example.foody.R
 import com.example.foody.adapters.FavoriteRecipesAdapter
 import com.example.foody.databinding.FragmentFavoriteRecipesBinding
 import com.example.foody.viewmodels.MainViewModel
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_favorite_recipes.view.*
+import kotlinx.coroutines.NonCancellable.message
 
 //anytime we create our MainViewModel that requires dependency injection,
 //we need to annotate with AndroidEntryPoint so that hilt can create the dependencies
 @AndroidEntryPoint
 class FavoriteRecipesFragment : Fragment() {
-
-    private val mAdapter: FavoriteRecipesAdapter by lazy { FavoriteRecipesAdapter() }
     private val mainViewModel: MainViewModel by viewModels()
+    private val mAdapter: FavoriteRecipesAdapter by lazy { FavoriteRecipesAdapter(requireActivity(), mainViewModel) }
     private var _binding: FragmentFavoriteRecipesBinding? = null
     private val binding get() = _binding!!
     override fun onCreateView(
@@ -33,6 +38,7 @@ class FavoriteRecipesFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.mainViewModel = mainViewModel
         binding.mAdapter = mAdapter
+        setHasOptionsMenu(true)
         val view = inflater.inflate(R.layout.fragment_favorite_recipes, container, false)
         setupRecyclerView(binding.favoriteRecipesRecyclerView)
         //observe the data from reading Favorite Recipes from Room database and set the data in the recycler view adapter
@@ -42,14 +48,37 @@ class FavoriteRecipesFragment : Fragment() {
         return binding.root
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.favorite_recipes_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == R.id.deleteAll_favorite_recipes_menu){
+            mainViewModel.deleteAllFavoriteRecipes()
+            showSnackBar()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         _binding = null
+        //clear the contextual action mode when we navigate away from this fragment
+        mAdapter.clearContextualActionMode()
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView){
         recyclerView.adapter = mAdapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+    }
+
+    private fun showSnackBar(){
+        Snackbar.make(
+            binding.root,
+            "All Recipes Removed.",
+            Snackbar.LENGTH_SHORT
+        ).setAction("Okay"){}
+            .show()
     }
 
 }
