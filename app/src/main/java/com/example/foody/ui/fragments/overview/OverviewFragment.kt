@@ -12,6 +12,7 @@ import com.example.foody.models.Result
 import com.example.foody.util.Constants.Companion.RECIPE_RESULT_KEY
 import kotlinx.android.synthetic.main.fragment_overview.view.*
 import org.jsoup.Jsoup
+import kotlin.reflect.KProperty1
 
 class OverviewFragment : Fragment() {
     override fun onCreateView(
@@ -32,34 +33,20 @@ class OverviewFragment : Fragment() {
             view.summary_textView.text = summary
         }
 
-        if(myBundle?.vegetarian == true){
-            view.vegetarian_imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
-            view.vegetarian_textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
-        }
+        val viewsList = listOf(
+            Triple(myBundle?.vegetarian, view.vegetarian_imageView, view.vegetarian_textView),
+            Triple(myBundle?.vegan, view.vegan_imageView, view.vegan_textView),
+            Triple(myBundle?.glutenFree, view.gluten_free_imageView, view.gluten_free_textView),
+            Triple(myBundle?.dairyFree, view.dairy_free_imageView, view.dairy_free_textView),
+            Triple(myBundle?.veryHealthy, view.healthy_imageView, view.healthy_textView),
+            Triple(myBundle?.cheap, view.cheap_imageView, view.cheap_textView),
+        )
 
-        if(myBundle?.vegan == true){
-            view.vegan_imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
-            view.vegan_textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
-        }
-
-        if(myBundle?.glutenFree == true){
-            view.gluten_free_imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
-            view.gluten_free_textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
-        }
-
-        if(myBundle?.dairyFree == true){
-            view.dairy_free_imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
-            view.dairy_free_textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
-        }
-
-        if(myBundle?.veryHealthy == true){
-            view.healthy_imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
-            view.healthy_textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
-        }
-
-        if(myBundle?.cheap == true){
-            view.cheap_imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
-            view.cheap_textView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
+        for((state, imageView, texView) in viewsList){
+            if(state != null && state == true){
+                imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
+                texView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
+            }
         }
 
         return view

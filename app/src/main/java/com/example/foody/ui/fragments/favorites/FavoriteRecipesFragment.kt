@@ -18,8 +18,6 @@ import com.example.foody.databinding.FragmentFavoriteRecipesBinding
 import com.example.foody.viewmodels.MainViewModel
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_favorite_recipes.view.*
-import kotlinx.coroutines.NonCancellable.message
 
 //anytime we create our MainViewModel that requires dependency injection,
 //we need to annotate with AndroidEntryPoint so that hilt can create the dependencies
