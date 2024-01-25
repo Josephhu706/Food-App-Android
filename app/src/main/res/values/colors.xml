@@ -18,6 +18,8 @@
 
 <!--    light theme-->
     <color name="backgroundColor">@color/lightGray</color>
+    <color name="placeholderColor">@color/darker</color>
+    <color name="itemColor">@color/darker</color>
 
     //Custom Chip Style
     <color name="checkedChipBackgroundColor">#206200EA</color>
