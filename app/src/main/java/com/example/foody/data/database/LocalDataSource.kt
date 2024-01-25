@@ -18,7 +18,7 @@ class LocalDataSource @Inject constructor(
         return recipesDao.readFavoriteRecipes()
     }
 
-    fun readFoodJoke(): Flow<List<FoodJoke>>{
+    fun readFoodJoke(): Flow<List<FoodJokeEntity>>{
         return recipesDao.readFoodJoke()
     }
 
