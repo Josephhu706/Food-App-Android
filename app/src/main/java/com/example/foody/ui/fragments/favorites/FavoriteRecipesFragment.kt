@@ -30,12 +30,11 @@ class FavoriteRecipesFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
         _binding = FragmentFavoriteRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
         binding.mainViewModel = mainViewModel
-        binding.mAdapter = mAdapter
         setHasOptionsMenu(true)
         val view = inflater.inflate(R.layout.fragment_favorite_recipes, container, false)
         setupRecyclerView(binding.favoriteRecipesRecyclerView)
@@ -58,8 +57,8 @@ class FavoriteRecipesFragment : Fragment() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         _binding = null
         //clear the contextual action mode when we navigate away from this fragment
         mAdapter.clearContextualActionMode()
