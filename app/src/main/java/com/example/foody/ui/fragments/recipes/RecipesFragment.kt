@@ -70,7 +70,11 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
             recipesViewModel.backOnline = it
         }
         //launch a coroutine because .collect is a suspend function
-        lifecycleScope.launch {
+        //checkNetworkAvailability is a mutable state flow and persists in the background even when the current fragment is not active
+        //When we we are in another fragment and we turn on or off internet connection, readDatabase is called
+        //we only want to collect our mutableStateFlow when our lifecycle is started for this fragment and not when we are in another fragment
+        //when we call launcheWhenStarted, it means this is called when at least the view is created.
+        lifecycleScope.launchWhenStarted {
             networkListener = NetworkListener()
             //collect the MutableStateFlow for networkAvailability and observe its value
             networkListener.checkNetworkAvailability(requireContext())
@@ -81,6 +85,11 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
                     recipesViewModel.networkStatus = status
                     recipesViewModel.showNetworkStatus()
                     //whenever our network status changes, we want to read the room db or make api call
+                    //the app was crashing when we turn network on or off in another fragment.
+                    //this is because the RecipesFragment still exists in memory even when we navigate to a different fragment and the onCreateView is still called to rebuild the UI even when not visible
+                    //because of this, checkNetworkAvailability .collect is always observing and the lifecycleScope.launch persists beyond the view's lifecycle.
+                    //readRecipes is managed by the viewLifecycleOwner and when readRecipes is called outside of the viewLifecycleOwner Scope, the app crashes because we are trying to access the view.
+                    // the lifecycle scope of the fragment exists outside of onDestroyView, the view's lifecycle does not.
                     readDatabase()
                 }
         }
