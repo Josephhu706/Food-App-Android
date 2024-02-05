@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setTheme(R.style.AppTheme)
         setContentView(binding.root)
-        val navController = findNavController(R.id.navHostFragment)
+        navController = findNavController(R.id.navHostFragment)
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.recipesFragment,
@@ -31,8 +31,10 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
+
        binding.bottomNavigationView.setupWithNavController(navController)
         setupActionBarWithNavController(navController, appBarConfiguration)
+
 
     }
 

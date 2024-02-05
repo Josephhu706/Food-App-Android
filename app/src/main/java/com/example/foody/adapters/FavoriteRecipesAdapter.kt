@@ -18,7 +18,6 @@ import com.example.foody.ui.fragments.favorites.FavoriteRecipesFragmentDirection
 import com.example.foody.util.RecipesDiffUtil
 import com.example.foody.viewmodels.MainViewModel
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.favorite_recipes_row_layout.view.*
 
 class FavoriteRecipesAdapter(
     private val requireActivity: FragmentActivity,
@@ -30,7 +29,7 @@ class FavoriteRecipesAdapter(
     private lateinit var rootView: View
     private var selectedRecipes = arrayListOf<FavoritesEntity>()
     private var myViewHolders = arrayListOf<MyViewHolder>()
-    class MyViewHolder(private val binding: FavoriteRecipesRowLayoutBinding): RecyclerView.ViewHolder(binding.root){
+    class MyViewHolder(val binding: FavoriteRecipesRowLayoutBinding): RecyclerView.ViewHolder(binding.root){
         fun bind(favoritesEntity: FavoritesEntity){
             binding.favoritesEntity = favoritesEntity
             ///updates our views
@@ -63,7 +62,7 @@ class FavoriteRecipesAdapter(
         val currentRecipe = favoriteRecipes[position]
         holder.bind(currentRecipe)
         //create onclick for each favorite recipe card to navigate to the details fragment of that card
-        holder.itemView.favoriteRecipesRowLayout.setOnClickListener{
+        holder.binding.favoriteRecipesRowLayout.setOnClickListener{
             //if we are multiSelecting, it means we are in the contextual action mode so we can change the style for each card
             if(multiSelection) {
                 //we only call applySelection and set our card styles if multiSelection is true, so we do not accidentally navigate to our detailsActivity when we are making selections in our list.
@@ -78,7 +77,7 @@ class FavoriteRecipesAdapter(
             }
         }
         //long lick listener
-        holder.itemView.favoriteRecipesRowLayout.setOnLongClickListener{
+        holder.binding.favoriteRecipesRowLayout.setOnLongClickListener{
             //if multiSelection is false, we want to set it to true (we are currently multi-selecting) and then start the action mode context
             //The start applying the selection with the view holder of selected item and the current recipe
             if(!multiSelection) {
@@ -112,10 +111,10 @@ class FavoriteRecipesAdapter(
 
     //this changes the stroke and background color of our favorite_recipes_row_layout when selected
     private fun changeRecipeStyle(holder: MyViewHolder, backgroundColor: Int, strokeColor: Int){
-        holder.itemView.favoriteRecipesRowLayout.setBackgroundColor(
+        holder.binding.favoriteRecipesRowLayout.setBackgroundColor(
             ContextCompat.getColor(requireActivity, backgroundColor)
         )
-        holder.itemView.favorite_row_cardView.strokeColor =
+        holder.binding.favoriteRowCardView.strokeColor =
             ContextCompat.getColor(requireActivity, strokeColor)
     }
 
