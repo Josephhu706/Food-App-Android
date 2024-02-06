@@ -6,14 +6,16 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
-import androidx.compose.animation.core.InfiniteAnimationPolicy.Key.equals
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,9 +23,6 @@ import com.example.foody.viewmodels.MainViewModel
 import com.example.foody.R
 import com.example.foody.adapters.RecipesAdapter
 import com.example.foody.databinding.FragmentRecipesBinding
-import com.example.foody.models.Result
-import com.example.foody.util.Constants
-import com.example.foody.util.Constants.Companion.API_KEY
 import com.example.foody.util.NetworkListener
 import com.example.foody.util.NetworkResult
 import com.example.foody.util.observeOnce
@@ -47,19 +46,34 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mainViewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
-        recipesViewModel = ViewModelProvider(requireActivity()).get(RecipesViewModel::class.java)
+        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
+        recipesViewModel = ViewModelProvider(requireActivity())[RecipesViewModel::class.java]
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this //in our fragmentRecipesFragment, we are using live data objects so we need to specify the lifecycle owner.
         binding.mainViewModel = mainViewModel //bind our mainViewModel to our fragment
 
-        setHasOptionsMenu(true)
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                //Add menu items here
+                menuInflater.inflate(R.menu.recipes_menu, menu)
+                val search = menu.findItem(R.id.menu_search)
+                val searchView = search.actionView as? SearchView
+                searchView?.isSubmitButtonEnabled = true
+                searchView?.setOnQueryTextListener(this@RecipesFragment)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                // Handle the menu selection
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
         setupRecyclerView()
 
         //get the lastest value from dataStore and set that value to the backOnline variable
@@ -110,15 +124,6 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
         showShimmerEffect()
     }
 
-    //this function creates the search menu
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.recipes_menu, menu)
-        val search = menu.findItem(R.id.menu_search)
-        val searchView = search.actionView as? SearchView
-        searchView?.isSubmitButtonEnabled = true
-        searchView?.setOnQueryTextListener(this)
-    }
-
     private fun readDatabase() {
         lifecycleScope.launch{
             //don't call read database, only call readDatabase when this function is called
@@ -128,7 +133,7 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
                 //when we leave the bottomSheet we want to request new ai
                 var test = false
                 if(arguments != null) {
-                    test = arguments!!.getBoolean("backFromBottomSheet", false)
+                    test = requireArguments().getBoolean("backFromBottomSheet", false)
                 }
                 if (database.isNotEmpty() && !test){ //if there's a row in the db then set the data for the recycler view
                     Log.d("RecipesFragment", "readDatabase called!")
@@ -217,7 +222,7 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
     }
 
     override fun onDestroyView() {
-        super.onDestroy()
+        super.onDestroyView()
         _binding = null //this prevents memory leaks
         //whenever the recipes fragment is destroyed then the binding will be set to null
     }

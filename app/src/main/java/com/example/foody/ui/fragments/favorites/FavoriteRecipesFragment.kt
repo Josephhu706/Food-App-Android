@@ -9,7 +9,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.foody.R
@@ -35,25 +38,28 @@ class FavoriteRecipesFragment : Fragment() {
         _binding = FragmentFavoriteRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
         binding.mainViewModel = mainViewModel
-        setHasOptionsMenu(true)
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                //Add menu items here
+                menuInflater.inflate(R.menu.favorite_recipes_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                if(menuItem.itemId == R.id.deleteAll_favorite_recipes_menu){
+                    mainViewModel.deleteAllFavoriteRecipes()
+                    showSnackBar()
+                }
+                // Handle the menu selection
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
         setupRecyclerView(binding.favoriteRecipesRecyclerView)
         //observe the data from reading Favorite Recipes from Room database and set the data in the recycler view adapter
         mainViewModel.readFavoriteRecipes.observe(viewLifecycleOwner){favoritesEntity ->
             mAdapter.setData(favoritesEntity)
         }
         return binding.root
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.favorite_recipes_menu, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if(item.itemId == R.id.deleteAll_favorite_recipes_menu){
-            mainViewModel.deleteAllFavoriteRecipes()
-            showSnackBar()
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     override fun onDestroyView() {

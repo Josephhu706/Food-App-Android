@@ -49,21 +49,21 @@ class RecipesBottomSheet : BottomSheetDialogFragment() {
         }
 
         //store meal type chip data in variables
-        binding.mealTypeChipGroup.setOnCheckedChangeListener{ group, selectedChipId ->
+        binding.mealTypeChipGroup.setOnCheckedStateChangeListener{ group, selectedChipId ->
             //get the selecte chip
-            val chip = group.findViewById<Chip>(selectedChipId)
+            val chip = group.findViewById<Chip>(selectedChipId.first())
             //get the text as lowercase on the chip
             val selectedMealType = chip.text.toString().lowercase(Locale.ROOT)
             mealTypeChip = selectedMealType
-            mealTypeChipId = selectedChipId
+            mealTypeChipId = selectedChipId.first()
         }
 
         //store diet type chip data in variables
-        binding.dietTypeChipGroup.setOnCheckedChangeListener { group, selectedChipId ->
-            val chip = group.findViewById<Chip>(selectedChipId)
+        binding.dietTypeChipGroup.setOnCheckedStateChangeListener { group, selectedChipId ->
+            val chip = group.findViewById<Chip>(selectedChipId.first())
             val selectedDietType = chip.text.toString().lowercase(Locale.ROOT)
             dietTypeChip = selectedDietType
-            dietTypeChipId = selectedChipId
+            dietTypeChipId = selectedChipId.first()
         }
 
         binding.applyBtn.setOnClickListener {
