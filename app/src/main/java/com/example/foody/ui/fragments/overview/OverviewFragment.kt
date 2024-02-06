@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import coil.load
 import com.example.foody.R
+import com.example.foody.bindingadapters.RecipesRowBinding
 import com.example.foody.databinding.FragmentOverviewBinding
 import com.example.foody.models.Result
 import com.example.foody.util.Constants.Companion.RECIPE_RESULT_KEY
@@ -27,28 +28,25 @@ class OverviewFragment : Fragment() {
     ): View {
         _binding = FragmentOverviewBinding.inflate(inflater, container, false)
         val args = arguments
-        val myBundle: Result? = args?.getParcelable(RECIPE_RESULT_KEY)
+        val myBundle: Result = args!!.getParcelable<Result>(RECIPE_RESULT_KEY) as Result
 
-        binding.mainImageView.load(myBundle?.image)
-        binding.favoriteTitleTextView.text = myBundle?.title
-        binding.likesTextView.text = myBundle?.aggregateLikes.toString()
-        binding.timeTextView.text = myBundle?.readyInMinutes.toString()
-        myBundle?.summary.let {
-            val summary = Jsoup.parse(it).text()
-            binding.summaryTextView.text = summary
-        }
+        binding.mainImageView.load(myBundle.image)
+        binding.favoriteTitleTextView.text = myBundle.title
+        binding.likesTextView.text = myBundle.aggregateLikes.toString()
+        binding.timeTextView.text = myBundle.readyInMinutes.toString()
+        RecipesRowBinding.parseHtml(binding.summaryTextView, myBundle.summary)
 
         val viewsList = listOf(
-            Triple(myBundle?.vegetarian, binding.vegetarianImageView, binding.vegetarianTextView),
-            Triple(myBundle?.vegan, binding.veganImageView, binding.veganTextView),
-            Triple(myBundle?.glutenFree, binding.glutenFreeImageView, binding.glutenFreeTextView),
-            Triple(myBundle?.dairyFree, binding.dairyFreeImageView, binding.dairyFreeTextView),
-            Triple(myBundle?.veryHealthy, binding.healthyImageView, binding.healthyTextView),
-            Triple(myBundle?.cheap, binding.cheapImageView, binding.cheapTextView),
+            Triple(myBundle.vegetarian, binding.vegetarianImageView, binding.vegetarianTextView),
+            Triple(myBundle.vegan, binding.veganImageView, binding.veganTextView),
+            Triple(myBundle.glutenFree, binding.glutenFreeImageView, binding.glutenFreeTextView),
+            Triple(myBundle.dairyFree, binding.dairyFreeImageView, binding.dairyFreeTextView),
+            Triple(myBundle.veryHealthy, binding.healthyImageView, binding.healthyTextView),
+            Triple(myBundle.cheap, binding.cheapImageView, binding.cheapTextView),
         )
 
         for((state, imageView, texView) in viewsList){
-            if(state != null && state == true){
+            if(state){
                 imageView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.green))
                 texView.setTextColor(ContextCompat.getColor(requireContext(), R.color.green))
             }
