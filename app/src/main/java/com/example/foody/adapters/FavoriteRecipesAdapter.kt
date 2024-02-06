@@ -18,7 +18,6 @@ import com.example.foody.ui.fragments.favorites.FavoriteRecipesFragmentDirection
 import com.example.foody.util.RecipesDiffUtil
 import com.example.foody.viewmodels.MainViewModel
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.favorite_recipes_row_layout.view.*
 
 class FavoriteRecipesAdapter(
     private val requireActivity: FragmentActivity,
@@ -30,7 +29,7 @@ class FavoriteRecipesAdapter(
     private lateinit var rootView: View
     private var selectedRecipes = arrayListOf<FavoritesEntity>()
     private var myViewHolders = arrayListOf<MyViewHolder>()
-    class MyViewHolder(private val binding: FavoriteRecipesRowLayoutBinding): RecyclerView.ViewHolder(binding.root){
+    class MyViewHolder(val binding: FavoriteRecipesRowLayoutBinding): RecyclerView.ViewHolder(binding.root){
         fun bind(favoritesEntity: FavoritesEntity){
             binding.favoritesEntity = favoritesEntity
             ///updates our views
@@ -62,8 +61,10 @@ class FavoriteRecipesAdapter(
         //dynamically get the position of each row and store it in selectedRecipe
         val currentRecipe = favoriteRecipes[position]
         holder.bind(currentRecipe)
+        //whenever we scroll on our recycler view, this will be triggered
+        saveItemStateOnScroll(currentRecipe, holder)
         //create onclick for each favorite recipe card to navigate to the details fragment of that card
-        holder.itemView.favoriteRecipesRowLayout.setOnClickListener{
+        holder.binding.favoriteRecipesRowLayout.setOnClickListener{
             //if we are multiSelecting, it means we are in the contextual action mode so we can change the style for each card
             if(multiSelection) {
                 //we only call applySelection and set our card styles if multiSelection is true, so we do not accidentally navigate to our detailsActivity when we are making selections in our list.
@@ -78,20 +79,29 @@ class FavoriteRecipesAdapter(
             }
         }
         //long lick listener
-        holder.itemView.favoriteRecipesRowLayout.setOnLongClickListener{
+        holder.binding.favoriteRecipesRowLayout.setOnLongClickListener{
             //if multiSelection is false, we want to set it to true (we are currently multi-selecting) and then start the action mode context
             //The start applying the selection with the view holder of selected item and the current recipe
             if(!multiSelection) {
                 //of we have long clicked, we are entering context action mode so we want to select that card
                 multiSelection = true
                 requireActivity.startActionMode(this)
-                applySelection(holder, currentRecipe)
                 true
             } else {
-                //if we are not multiSelecting, we are not in contextual action mode so we set it to false
-                multiSelection = false
-                false
+                //lets you select an item in contextual item mode if you long click
+                applySelection(holder, currentRecipe)
+                true
             }
+        }
+    }
+
+    //triggered whenever we scroll and our recycler view items are recycled
+    private fun saveItemStateOnScroll(currentRecipe : FavoritesEntity, holder: MyViewHolder){
+        //check if our selected recipes variable contains a current recipe passed in, and if so set the stroke color
+        if(selectedRecipes.contains(currentRecipe)){
+            changeRecipeStyle(holder, R.color.cardBackgroundLightColor, R.color.colorPrimary)
+        } else {
+            changeRecipeStyle(holder, R.color.cardBackgroundColor, R.color.strokeColor)
         }
     }
 
@@ -112,10 +122,10 @@ class FavoriteRecipesAdapter(
 
     //this changes the stroke and background color of our favorite_recipes_row_layout when selected
     private fun changeRecipeStyle(holder: MyViewHolder, backgroundColor: Int, strokeColor: Int){
-        holder.itemView.favoriteRecipesRowLayout.setBackgroundColor(
+        holder.binding.favoriteRecipesRowLayout.setBackgroundColor(
             ContextCompat.getColor(requireActivity, backgroundColor)
         )
-        holder.itemView.favorite_row_cardView.strokeColor =
+        holder.binding.favoriteRowCardView.strokeColor =
             ContextCompat.getColor(requireActivity, strokeColor)
     }
 
@@ -124,6 +134,8 @@ class FavoriteRecipesAdapter(
         when(selectedRecipes.size) {
             0 -> {
                 mActionMode.finish()
+                //don't allow multiSelection if we have no selected recipes
+                multiSelection = false
             }
             1 -> {
                 mActionMode.title = "${selectedRecipes.size} item selected"

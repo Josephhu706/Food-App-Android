@@ -3,10 +3,12 @@ package com.example.foody.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.core.preferencesKey
-import androidx.datastore.preferences.createDataStore
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.foody.util.Constants.Companion.DEFAULT_DIET_TYPE
 import com.example.foody.util.Constants.Companion.DEFAULT_MEAL_TYPE
 import com.example.foody.util.Constants.Companion.PREFERENCES_BACK_ONLINE
@@ -16,33 +18,33 @@ import com.example.foody.util.Constants.Companion.PREFERENCES_MEAL_TYPE
 import com.example.foody.util.Constants.Companion.PREFERENCES_MEAL_TYPE_ID
 import com.example.foody.util.Constants.Companion.PREFERENCES_NAME
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ActivityRetainedScoped
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import javax.inject.Inject
 
+//create datastore and name it
+private val Context.dataStore by preferencesDataStore(PREFERENCES_NAME)
 //we need to save the bottomsheet selected chips in our local data store, so when we select a chip the next time it persists
 //we need the application context for this (android context stuff so we have access to datastore)
 //this repository will be used inside our RecipesViewModel
-@ActivityRetainedScoped
+@ViewModelScoped
 class DataStoreRepository @Inject constructor(@ApplicationContext private  val context: Context) {
     //these are our keys we're going to use to access our datastore preferences
     private  object PreferencesKeys {
         //this is for the meal type chip
-        val selectedMealType = preferencesKey<String>(PREFERENCES_MEAL_TYPE)
+        val selectedMealType = stringPreferencesKey(PREFERENCES_MEAL_TYPE)
         //this is the id of the meal type chip
-        val selectedMealTypeId = preferencesKey<Int>(PREFERENCES_MEAL_TYPE_ID)
+        val selectedMealTypeId = intPreferencesKey(PREFERENCES_MEAL_TYPE_ID)
         //this is the chip for the diet Type
-        val selectedDietType = preferencesKey<String>(PREFERENCES_DIET_TYPE)
-        val selectedDietTypeId = preferencesKey<Int>(PREFERENCES_DIET_TYPE_ID)
-        val backOnline = preferencesKey<Boolean>(PREFERENCES_BACK_ONLINE)
+        val selectedDietType = stringPreferencesKey(PREFERENCES_DIET_TYPE)
+        val selectedDietTypeId = intPreferencesKey(PREFERENCES_DIET_TYPE_ID)
+        val backOnline = booleanPreferencesKey(PREFERENCES_BACK_ONLINE)
     }
-    //create datastore and name it
-    private val dataStore: DataStore<Preferences> = context.createDataStore(
-        name = PREFERENCES_NAME
-    )
+
+    private val dataStore: DataStore<Preferences> = context.dataStore
 
     //store values in datastore preferences using preference keys
     suspend fun saveMealAndDietType(mealType: String, mealTypeId: Int, dietType: String, dietTypeId: Int) {

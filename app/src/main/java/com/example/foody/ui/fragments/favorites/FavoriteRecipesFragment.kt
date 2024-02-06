@@ -9,7 +9,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.foody.R
@@ -30,14 +33,27 @@ class FavoriteRecipesFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
         _binding = FragmentFavoriteRecipesBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
         binding.mainViewModel = mainViewModel
-        binding.mAdapter = mAdapter
-        setHasOptionsMenu(true)
-        val view = inflater.inflate(R.layout.fragment_favorite_recipes, container, false)
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                //Add menu items here
+                menuInflater.inflate(R.menu.favorite_recipes_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                if(menuItem.itemId == R.id.deleteAll_favorite_recipes_menu){
+                    mainViewModel.deleteAllFavoriteRecipes()
+                    showSnackBar()
+                }
+                // Handle the menu selection
+                return true
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
         setupRecyclerView(binding.favoriteRecipesRecyclerView)
         //observe the data from reading Favorite Recipes from Room database and set the data in the recycler view adapter
         mainViewModel.readFavoriteRecipes.observe(viewLifecycleOwner){favoritesEntity ->
@@ -46,20 +62,8 @@ class FavoriteRecipesFragment : Fragment() {
         return binding.root
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.favorite_recipes_menu, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if(item.itemId == R.id.deleteAll_favorite_recipes_menu){
-            mainViewModel.deleteAllFavoriteRecipes()
-            showSnackBar()
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         _binding = null
         //clear the contextual action mode when we navigate away from this fragment
         mAdapter.clearContextualActionMode()

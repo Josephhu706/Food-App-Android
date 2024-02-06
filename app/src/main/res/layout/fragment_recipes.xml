@@ -15,20 +15,36 @@
         android:background="@color/backgroundColor"
         tools:context=".ui.fragments.recipes.RecipesFragment">
 
-        <com.todkars.shimmer.ShimmerRecyclerView
-            android:id="@+id/recyclerView"
+        <com.facebook.shimmer.ShimmerFrameLayout
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:orientation="vertical"
+            android:id="@+id/shimmerFrameLayout"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:shimmer_recycler_item_count="4"
-            app:shimmer_recycler_layout="@layout/placeholder_row_layout" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <include layout="@layout/placeholder_row_layout"/>
+                <include layout="@layout/placeholder_row_layout"/>
+                <include layout="@layout/placeholder_row_layout"/>
+                <include layout="@layout/placeholder_row_layout"/>
+            </LinearLayout>
+        </com.facebook.shimmer.ShimmerFrameLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:id="@+id/recyclerView"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/recipes_fab"
@@ -63,8 +79,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="9dp"
             android:alpha="0.5"
-            readApiResponse2="@{mainViewModel.recipesResponse}"
-            readDatabase2="@{mainViewModel.readRecipes}"
+            readApiResponse="@{mainViewModel.recipesResponse}"
+            readDatabase="@{mainViewModel.readRecipes}"
             android:text="@string/no_internet_connection"
             android:textSize="18sp"
             android:textStyle="bold"

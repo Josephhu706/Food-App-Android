@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.foody.data.DataStoreRepository
+import com.example.foody.data.MealAndDietType
 import com.example.foody.util.Constants
 import com.example.foody.util.Constants.Companion.API_KEY
 import com.example.foody.util.Constants.Companion.DEFAULT_DIET_TYPE
@@ -30,8 +31,7 @@ class RecipesViewModel @Inject constructor(
     private val dataStoreRepository: DataStoreRepository
 ): AndroidViewModel(application) {
 
-    private var mealType = DEFAULT_MEAL_TYPE
-    private var dietType = DEFAULT_DIET_TYPE
+    private lateinit var mealAndDiet: MealAndDietType
 
     var networkStatus = false
     var backOnline = false
@@ -41,11 +41,18 @@ class RecipesViewModel @Inject constructor(
     //this checks the value of our networkConnection in local storage and converts it to liveData
     val readBackOnline = dataStoreRepository.readBackOnline.asLiveData()
 
-    fun saveMealAndDietType(mealType: String, mealTypeId: Int, dietType:String, dietTypeId: Int) =
+    fun saveMealAndDietType() =
         viewModelScope.launch(Dispatchers.IO) {
-            dataStoreRepository.saveMealAndDietType(mealType, mealTypeId, dietType, dietTypeId)
+            dataStoreRepository.saveMealAndDietType(mealAndDiet.selectedMealType, mealAndDiet.selectedMealTypeId, mealAndDiet.selectedDietType, mealAndDiet.selectedDietTypeId)
     }
-
+    fun saveMealAndDietTypeTemp(mealType: String, mealTypeId: Int, dietType:String, dietTypeId: Int) {
+        mealAndDiet = MealAndDietType(
+            mealType,
+            mealTypeId,
+            dietType,
+            dietTypeId
+        )
+    }
     //this function passes the internet connection status to the dataStoreRepo and saves it in local storage
     fun saveBackOnline(backOnline: Boolean) =
         viewModelScope.launch(Dispatchers.IO){
@@ -54,20 +61,10 @@ class RecipesViewModel @Inject constructor(
 
     fun applyQueries(): HashMap<String, String>{
         val queries: HashMap<String, String> = HashMap()
-
-        viewModelScope.launch {
-        //call readMealAndDietType suspend function from repository
-            readMealAndDietType.collect{ value ->
-                //set the value of the variables stored above to the datastore values
-                //we are getting the newest values from datastore preferences
-                mealType = value.selectedMealType
-                dietType = value.selectedDietType
-            }
-        }
         queries[QUERY_NUMBER] = DEFAULT_RECIPES_NUMBER
         queries[QUERY_API_KEY] = API_KEY
-        queries[QUERY_TYPE] = mealType
-        queries[QUERY_DIET] = dietType
+        queries[QUERY_TYPE] = mealAndDiet.selectedMealType
+        queries[QUERY_DIET] = mealAndDiet.selectedDietType
         queries[QUERY_ADD_RECIPE_INFORMATION] = "true"
         queries[QUERY_FILL_INGREDIENTS] = "true"
         return queries
