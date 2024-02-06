@@ -61,6 +61,9 @@ class DetailsActivity : AppCompatActivity() {
             fragments,
             this
         )
+        //disable swiping between fragments and only navigate to fragments by pressing tab
+        //this will remove the conflict between our motion layout and swipe gestures
+        binding.viewPager2.isUserInputEnabled = false
 
         //set the adapter on our viewPager2 to the adapter we created
         //this sets the adapter for the viewPager in the xml

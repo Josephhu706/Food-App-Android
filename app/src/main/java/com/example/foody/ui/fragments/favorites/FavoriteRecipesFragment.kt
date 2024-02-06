@@ -36,7 +36,6 @@ class FavoriteRecipesFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.mainViewModel = mainViewModel
         setHasOptionsMenu(true)
-        val view = inflater.inflate(R.layout.fragment_favorite_recipes, container, false)
         setupRecyclerView(binding.favoriteRecipesRecyclerView)
         //observe the data from reading Favorite Recipes from Room database and set the data in the recycler view adapter
         mainViewModel.readFavoriteRecipes.observe(viewLifecycleOwner){favoritesEntity ->

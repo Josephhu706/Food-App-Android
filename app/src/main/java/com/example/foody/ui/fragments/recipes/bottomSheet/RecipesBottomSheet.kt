@@ -68,7 +68,8 @@ class RecipesBottomSheet : BottomSheetDialogFragment() {
 
         binding.applyBtn.setOnClickListener {
             //save the values of the bottomsheet chips
-            recipesViewModel.saveMealAndDietType(
+            //this always saves the most recent bottom sheet state in a local variable in the vm
+            recipesViewModel.saveMealAndDietTypeTemp(
                 mealTypeChip,
                 mealTypeChipId,
                 dietTypeChip,
@@ -85,6 +86,11 @@ class RecipesBottomSheet : BottomSheetDialogFragment() {
         //if we have a chip id
         if(chipId != 0){
             try {
+                //find the target chip and set its checked state to true
+                val targetView = chipGroup.findViewById<Chip>(chipId)
+                targetView.isChecked = true
+                //set the focus of the chip so it is always visible if checked
+                chipGroup.requestChildFocus(targetView, targetView)
                 //find the checked chip and change the checked state to true (you can't uncheck a chip by clicking it)
                 chipGroup.findViewById<Chip>(chipId).isChecked = true
             } catch (e: Exception) {

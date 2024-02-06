@@ -19,8 +19,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        //you need to call setTheme before the binding or your app will crash
         setTheme(R.style.AppTheme)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         navController = findNavController(R.id.navHostFragment)
         val appBarConfiguration = AppBarConfiguration(
