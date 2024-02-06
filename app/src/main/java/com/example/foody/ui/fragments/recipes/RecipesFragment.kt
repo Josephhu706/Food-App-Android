@@ -33,6 +33,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
+    private var dataRequested = false
     //automatically added by navigation component when we specify arguments in our my_nav
     private val args by navArgs<RecipesFragmentArgs>()
     private var _binding: FragmentRecipesBinding? = null
@@ -130,17 +131,16 @@ class RecipesFragment : Fragment(), SearchView.OnQueryTextListener {
             mainViewModel.readRecipes.observeOnce(viewLifecycleOwner){database ->
                 //if our database is not empty and we're not backFromBottomSheet, then load the data
                 //when we get back from our bottomSheet, it means we want to create a new query for our GET request. We only read from the database when backFromBottomSheet false
-                //when we leave the bottomSheet we want to request new ai
-                var test = false
-                if(arguments != null) {
-                    test = requireArguments().getBoolean("backFromBottomSheet", false)
-                }
-                if (database.isNotEmpty() && !test){ //if there's a row in the db then set the data for the recycler view
+                //when we leave the bottomSheet we want to request new api
+                if (database.isNotEmpty() && !args.backFromBottomSheet || database.isNotEmpty() && dataRequested){ //if there's a row in the db then set the data for the recycler view
                     Log.d("RecipesFragment", "readDatabase called!")
                     mAdapter.setData(database[0].foodRecipe) //access the row in the db
                     hideShimmerEffect()
                 } else {
-                    requestApiData()
+                    if(!dataRequested){
+                        requestApiData()
+                        dataRequested = true
+                    }
                 }
             }
         }
